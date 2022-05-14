@@ -1,0 +1,50 @@
+function custom_fee( $cart ) {
+    if ( is_admin() && ! defined( 'DOING_AJAX' ) )
+        return;
+
+    // Products in cart
+    $products_in_cart = count( $cart->get_cart() );
+
+    // Every so many products
+    $every = 3;
+
+    // When products in cart greater than or equal to every so many products
+    if ( $products_in_cart >= $every ) {
+        // Set array
+        $product_prices = array();
+
+        // Loop though cart items
+        foreach ( $cart->get_cart() as $cart_item ) {
+            // Product
+            $product = $cart_item['data'];
+
+            // Get price
+            $product_price = $product->get_price();
+
+            // Push
+            $product_prices[] = $product_price;
+        }
+
+        // Sort: low to high
+        asort( $product_prices );
+
+        // Number of products receive a discount
+        $products_receive_discount = floor( $products_in_cart / $every );
+
+        // Set variable
+        $total = 0;
+
+        // Loop trough
+        foreach ( array_slice( $product_prices, 0, $products_receive_discount ) as $product_price ) {
+            // Calculate
+            $total += $product_price;
+        }
+
+        // Calculate discount
+        $discount = ( $total * 50 ) / 100;
+
+        // Add fee
+        $cart->add_fee( 'Discount', $discount, true );
+    }
+}
+add_action( 'woocommerce_cart_calculate_fees', 'custom_fee', 10, 1 );
